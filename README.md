@@ -4,15 +4,23 @@
 
 My repository with [Apache Flink](https://flink.apache.org) learnigns.
 
-## Quick Example
+## About Flink
 
 After installing Flink, you can try the following commands.
 
 ```bash
-cd "$FLINK_HOME"
-./$FLINK_HOME/bin/start-cluster.sh
+cd $FLINK_HOME/
+
+# Start the Flink Cluster
+# Check 👉 http://localhost:8081 🌎
+./bin/start-cluster.sh
+
+# Submit an example!
 ./bin/flink run ./examples/streaming/WordCount.jar
+# Check the results
 tail ./log/flink-*-taskexecutor-*.out
+
+# Stop the Flink Cluster
 ./bin/stop-cluster.sh 
 ```
 
@@ -21,5 +29,7 @@ tail ./log/flink-*-taskexecutor-*.out
 ## About the Project
 
 ```bash
-sbt assembly # build
+# Build 👇
+# Jar file will be at "target/scala-2.12/*.jar"
+sbt assembly
 ```
