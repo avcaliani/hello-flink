@@ -32,4 +32,9 @@ tail ./log/flink-*-taskexecutor-*.out
 # Build 👇
 # Jar file will be at "target/scala-2.12/*.jar"
 sbt assembly
+
+# Args
+# 1. Pipeline Name
+# 2. Lake Path
+flink run target/scala-2.12/hello-flink-assembly-1.0.jar dummy $(pwd)/data/
 ```
