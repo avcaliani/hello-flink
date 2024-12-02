@@ -10,10 +10,16 @@ After installing Flink, you can try the following commands.
 
 ```bash
 cd "$FLINK_HOME"
-./bin/start-cluster.sh
+./$FLINK_HOME/bin/start-cluster.sh
 ./bin/flink run ./examples/streaming/WordCount.jar
 tail ./log/flink-*-taskexecutor-*.out
 ./bin/stop-cluster.sh 
 ```
 
 > 💡 [Reference](https://nightlies.apache.org/flink/flink-docs-release-1.13/docs/try-flink/local_installation/)
+
+## About the Project
+
+```bash
+sbt assembly # build
+```
