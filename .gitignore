@@ -3,10 +3,12 @@
 *.log
 target/
 
-# SBT
-.bsp/
-
 # IDEs - intellij / vscode
 .idea
 .vscode/**/*
 !.vscode/settings.json
+
+# Gradle
+.gradle
+build
+
