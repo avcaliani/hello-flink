@@ -30,11 +30,11 @@ tail ./log/flink-*-taskexecutor-*.out
 
 ```bash
 # Build 👇
-# Jar file will be at "target/scala-2.12/*.jar"
-sbt assembly
+# Jar file will be at "build/libs/hello-flink-*-uber.jar"
+./gradlew uberJar
 
 # Args
 # 1. Pipeline Name
 # 2. Lake Path
-flink run target/scala-2.12/hello-flink-assembly-1.0.jar dummy $(pwd)/data/
+flink run build/libs/hello-flink-1.0.0-uber.jar dummy $(pwd)/data/
 ```
