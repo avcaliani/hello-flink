@@ -3,7 +3,7 @@ package br.avcaliani.hello_flink.models;
 import lombok.Data;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class Transaction {
@@ -17,5 +17,7 @@ public class Transaction {
 
     @JsonProperty("created_at")
     private String createdAt;
+
+    private List<String> tags;
 
 }

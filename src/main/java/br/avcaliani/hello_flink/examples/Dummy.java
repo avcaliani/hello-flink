@@ -22,7 +22,7 @@ public class Dummy extends Pipeline {
         var filePath = args.getBucket() + "/input/transactions/";
         var transactions = readTransactions(env, filePath);
         transactions.print();
-        env.execute("flink-csv-reader");
+        env.execute("flink-csv-reader--transactions");
         return this;
     }
 
@@ -39,6 +39,7 @@ public class Dummy extends Pipeline {
                 .addColumn(new Column(1, "tid", ColumnType.STRING))
                 .addColumn(new Column(2, "amount", ColumnType.STRING))
                 .addColumn(new Column(3, "created_at", ColumnType.STRING))
+                .addColumn(new Column(3, "tags", ColumnType.ARRAY).withArrayElementSeparator("#"))
                 .setColumnSeparator(',')
                 .build();
 

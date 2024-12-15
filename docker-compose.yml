@@ -1,0 +1,18 @@
+services:
+
+  # https://hub.docker.com/_/flink
+  flink:
+    image: flink:1.20-java17
+    container_name: flink-dev
+    ports:
+      - "8081:8081" # Flink UI
+    working_dir: /app
+    volumes:
+      - ./build/libs/:/app
+      - ./data/:/datalake/raw/
+    command:
+      - /bin/sh
+      - -c
+      - |
+        /opt/flink/bin/start-cluster.sh
+        tail -f /dev/null
