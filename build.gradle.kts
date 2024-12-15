@@ -21,9 +21,15 @@ repositories {
 }
 
 dependencies {
-    implementation("com.google.guava:guava:32.1.2-jre") // Example runtime dependency
-    compileOnly("org.slf4j:slf4j-api:2.0.9") // "Provided" dependency
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0") // Example Test Dependency
+
+    // Provided Dependency
+    compileOnly("org.apache.flink:flink-streaming-java:1.20.0")
+    compileOnly("org.apache.flink:flink-csv:2.0-preview1")
+    compileOnly("org.apache.flink:flink-connector-files:1.20.0")
+
+    // Lombok
+    implementation("org.projectlombok:lombok:1.18.36")
+    annotationProcessor("org.projectlombok:lombok:1.18.36")
 }
 
 tasks.withType<JavaCompile> {
@@ -39,7 +45,7 @@ tasks.register<Jar>("uberJar") {
     from(
         configurations.runtimeClasspath.get().filter {
             // Exclude the "provided" dependency
-            !it.name.contains("slf4j-api")
+            !it.name.contains("flink")
         }.map {
             if (it.isDirectory) it else zipTree(it)
         }
