@@ -39,8 +39,10 @@ public class Dummy extends Pipeline {
                 .addColumn(new Column(1, "tid", ColumnType.STRING))
                 .addColumn(new Column(2, "amount", ColumnType.STRING))
                 .addColumn(new Column(3, "created_at", ColumnType.STRING))
-                .addColumn(new Column(3, "tags", ColumnType.ARRAY).withArrayElementSeparator("#"))
+                .addColumn(new Column(3, "tags", ColumnType.ARRAY))
+                .setArrayElementSeparator("#")
                 .setColumnSeparator(',')
+                .setUseHeader(true)
                 .build();
 
         var format = CsvReaderFormat.forSchema(schema, TypeInformation.of(Transaction.class));
