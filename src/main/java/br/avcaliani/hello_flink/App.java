@@ -14,7 +14,8 @@ public class App {
 
     public static void main(String[] arguments) throws Exception {
 
-        if (arguments.length < 2) throw new RuntimeException("Pipeline name and bucket are required!");
+        if (arguments.length < 2)
+            throw new RuntimeException("Pipeline name and bucket are required!");
 
         var args = getArgs(arguments);
         var name = args.getPipeline();

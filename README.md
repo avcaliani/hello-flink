@@ -6,41 +6,55 @@
 ![#](https://img.shields.io/badge/java-17-blue.svg)
 ![#](https://img.shields.io/badge/apache--flink-1.20.x-ff4757.svg)
 
-My repository with [Apache Flink](https://flink.apache.org) learnigns.
+My repository with [Apache Flink](https://flink.apache.org) learnings.
 
-## About the Project
+## Quick Start
 
-Here is what you have to do to execute this project.
-
-### Flink on Docker
+Then, **download the data** 👇 
 
 ```bash
-# Start Flink Server
-# Check 👉 http://localhost:8081 🌎
-docker compose up -d
-
-# Stop
-docker compose down
+# Download the data 
+mkdir -p data/raw/users
+curl -o "data/raw/users/users.csv" \
+  "https://raw.githubusercontent.com/avcaliani/kafka-in-docker/refs/heads/main/scripts/users.csv"
 ```
 
-### Running the Application
+Then, start **flink server** 👇
 
 ```bash
-# Build 👇
+# 💡 To stop just type `docker compose down`
+docker compose up -d
+```
+
+> You can check Flink UI here 👉 http://localhost:8081
+
+Then, start **kafka producer** ([ref](https://github.com/avcaliani/kafka-in-docker/tree/main/scripts)) 👇
+
+```bash
+docker compose exec kafka-dev /opt/scripts/donu-transactions.sh
+```
+
+Finally, **build and run** the application 👇
+
+```bash
 # Jar file will be at "build/libs/hello-flink-*-uber.jar"
 ./gradlew uberJar
 
 # Args
 # 1. Pipeline Name
 # 2. Lake Path
-docker compose exec flink \
-  /opt/flink/bin/flink run hello-flink-1.0.0-uber.jar "dummy" "/datalake/raw"
+docker compose exec flink-dev \
+  /opt/flink/bin/flink run hello-flink-1.0.0-uber.jar "dummy" "/data"
 ```
 
+## Appendix
 
-## Flink Local 
+### Using a local Flink installation 
 
-I created a docker compose, but you can also use a local flink installation.  
+I created a docker compose, but you can also use a local flink installation. 
+
+> Have in mind you'll still need to setup the "kafka-dev".
+
 You can try the following commands.
 If they work, you can do the same with this application jar.
 

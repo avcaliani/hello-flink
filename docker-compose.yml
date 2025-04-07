@@ -1,7 +1,17 @@
 services:
 
+  # IMPORTANT ⚠️
+  # Before starting this docker compose, you need to build the `kafka-dev` image.
+  # Follow the instructions here 👇
+  #   https://github.com/avcaliani/kafka-in-docker
+  # kafka-dev:
+  #   image: kafka-dev
+  #   container_name: kafka-dev
+  #   ports:
+  #     - "9092:9092"
+
   # https://hub.docker.com/_/flink
-  flink:
+  flink-dev:
     image: flink:1.20-java17
     container_name: flink-dev
     ports:
@@ -9,7 +19,7 @@ services:
     working_dir: /app
     volumes:
       - ./build/libs/:/app
-      - ./data/:/datalake/raw/
+      - ./data/:/data/
     command:
       - /bin/sh
       - -c

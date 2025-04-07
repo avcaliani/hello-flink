@@ -6,18 +6,12 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.annotation.JsonPro
 import java.util.List;
 
 @Data
-public class Transaction {
-
-    private String tid;
+public class User {
 
     @JsonProperty("user_id")
-    private String userId;
+    private String id;
 
-    private String amount;
-
-    @JsonProperty("created_at")
-    private String createdAt;
-
-    private List<String> tags;
+    @JsonProperty("user_name")
+    private String name;
 
 }
