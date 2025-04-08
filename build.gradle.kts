@@ -23,9 +23,9 @@ repositories {
 dependencies {
 
     // Provided Dependency
-    compileOnly("org.apache.flink:flink-streaming-java:1.20.0")
-    compileOnly("org.apache.flink:flink-csv:2.0-preview1")
-    compileOnly("org.apache.flink:flink-connector-files:1.20.0")
+    compileOnly("org.apache.flink:flink-streaming-java:2.0.0")
+    compileOnly("org.apache.flink:flink-csv:2.0.0")
+    compileOnly("org.apache.flink:flink-connector-files:2.0.0")
 
     // Lombok
     implementation("org.projectlombok:lombok:1.18.36")
