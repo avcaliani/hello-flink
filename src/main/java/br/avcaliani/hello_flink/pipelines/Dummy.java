@@ -1,7 +1,6 @@
-package br.avcaliani.hello_flink.examples;
+package br.avcaliani.hello_flink.pipelines;
 
-import br.avcaliani.hello_flink.Pipeline;
-import br.avcaliani.hello_flink.models.Args;
+import br.avcaliani.hello_flink.cli.Args;
 import br.avcaliani.hello_flink.models.User;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.typeinfo.TypeInformation;

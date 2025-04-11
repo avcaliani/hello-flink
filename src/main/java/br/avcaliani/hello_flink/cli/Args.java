@@ -1,12 +1,16 @@
-package br.avcaliani.hello_flink.models;
+package br.avcaliani.hello_flink.cli;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 @Data
-@AllArgsConstructor
+@NoArgsConstructor
 public class Args {
+
+    Args(StreamExecutionEnvironment env) {
+        this.env = env;
+    }
 
     private StreamExecutionEnvironment env;
     private String pipeline;

@@ -44,7 +44,7 @@ Finally, **build and run** the application 👇
 # 1. Pipeline Name
 # 2. Lake Path
 docker compose exec flink-dev \
-  /opt/flink/bin/flink run hello-flink-1.0.0-uber.jar "dummy" "/data"
+  /opt/flink/bin/flink run hello-flink-1.0.0-uber.jar --pipeline "dummy" --bucket "/data"
 ```
 
 > 💡 [Reference](https://nightlies.apache.org/flink/flink-docs-release-2.0/docs/try-flink/local_installation/)
