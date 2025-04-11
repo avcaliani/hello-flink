@@ -15,5 +15,6 @@ public class Args {
     private StreamExecutionEnvironment env;
     private String pipeline;
     private String bucket;
+    private String kafkaBrokers;
 
 }

@@ -40,11 +40,22 @@ Finally, **build and run** the application 👇
 # Jar file will be at "build/libs/hello-flink-*-uber.jar"
 ./gradlew uberJar
 
-# Args
-# 1. Pipeline Name
-# 2. Lake Path
-docker compose exec flink-dev \
-  /opt/flink/bin/flink run hello-flink-1.0.0-uber.jar --pipeline "dummy" --bucket "/data"
+# Dummy Pipeline 👇
+#   Pretty simple pipeline, it just prints the list of customer in a CSV file. 
+docker compose exec flink-dev /opt/flink/bin/flink run \
+  "hello-flink-1.0.0-uber.jar" \
+  --pipeline "dummy" \
+  --bucket "/data"
+  
+# Invalid Transactions Pipeline 👇
+#   Classify the transactions as correct/incorrect, enrich and 
+#   forward them to another topic, check the diagram.
+docker compose exec flink-dev /opt/flink/bin/flink run \
+  "hello-flink-1.0.0-uber.jar" \
+  --pipeline "invalid-transactions" \
+  --kafka-brokers "kafka-dev:29092"
 ```
+
+![diagram](.docs/invalid-txn-diagram.png)
 
 > 💡 [Reference](https://nightlies.apache.org/flink/flink-docs-release-2.0/docs/try-flink/local_installation/)

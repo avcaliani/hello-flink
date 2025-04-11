@@ -11,8 +11,8 @@ public class ArgParser {
      */
     public static Args parse(String[] arguments) {
 
-        if (arguments == null || arguments.length < 4)
-            throw new RuntimeException("You must pass the pipeline and bucket arguments.");
+        if (arguments == null || arguments.length < 2)
+            throw new RuntimeException("You must pass at least the pipeline argument!");
 
         var args = new Args(flinkEnv());
         for (int i = 0; i < arguments.length; i = i + 2) {
@@ -29,6 +29,7 @@ public class ArgParser {
         switch (name) {
             case "--pipeline" -> args.setPipeline(value);
             case "--bucket" -> args.setBucket(value);
+            case "--kafka-brokers" -> args.setKafkaBrokers(value);
             default -> throw new RuntimeException("Unknown parameter passed: " + name);
         }
         ;
