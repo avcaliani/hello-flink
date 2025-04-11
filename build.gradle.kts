@@ -22,10 +22,15 @@ repositories {
 
 dependencies {
 
-    // Provided Dependency
+    // Provided Dependency 👉 compileOnly
     compileOnly("org.apache.flink:flink-streaming-java:2.0.0")
+
+    // CSV Connector
     compileOnly("org.apache.flink:flink-csv:2.0.0")
     compileOnly("org.apache.flink:flink-connector-files:2.0.0")
+
+    // Kafka Connector
+    implementation("org.apache.flink:flink-connector-kafka:4.0.0-2.0")
 
     // Lombok
     implementation("org.projectlombok:lombok:1.18.36")
@@ -42,10 +47,13 @@ tasks.register<Jar>("uberJar") {
     manifest {
         attributes["Main-Class"] = application.mainClass.get()
     }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE // 👈 THIS FIXES THE ERROR
     from(
         configurations.runtimeClasspath.get().filter {
             // Exclude the "provided" dependency
-            !it.name.contains("flink")
+            !it.name.contains("flink-streaming-java") &&
+                    !it.name.contains("flink-csv") &&
+                    !it.name.contains("flink-connector-files")
         }.map {
             if (it.isDirectory) it else zipTree(it)
         }
