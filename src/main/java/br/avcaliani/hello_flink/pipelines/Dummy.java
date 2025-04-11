@@ -3,6 +3,7 @@ package br.avcaliani.hello_flink.pipelines;
 import br.avcaliani.hello_flink.cli.Args;
 import br.avcaliani.hello_flink.models.User;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.connector.file.src.FileSource;
 import org.apache.flink.core.fs.Path;
@@ -20,13 +21,17 @@ public class Dummy extends Pipeline {
         var env = args.getEnv();
         var filePath = args.getBucket() + "/raw/users/";
         var users = this.readUsers(env, filePath);
-        users.print();
+        users.map((MapFunction<User, User>) user -> {
+                    user.setEmail(buildEmail(user.getName()));
+                    return user;
+                })
+                .print();
         env.execute("hello-flink--dummy");
         return this;
     }
 
     /**
-     * Read the users CSVs.
+     * Read the users CSVs. </br>
      * Instead of declaring the columns manually in the schema, you can use a POJO instead.
      *
      * @return CSV Schema.
@@ -53,4 +58,13 @@ public class Dummy extends Pipeline {
         );
     }
 
+    /**
+     * Create a fake email based on the name.
+     *
+     * @param name User name.
+     * @return User email.
+     */
+    private String buildEmail(String name) {
+        return name.toLowerCase().replaceAll(" ", ".") + "@github.com";
+    }
 }

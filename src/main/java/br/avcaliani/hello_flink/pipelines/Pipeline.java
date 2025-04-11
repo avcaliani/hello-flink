@@ -2,9 +2,10 @@ package br.avcaliani.hello_flink.pipelines;
 
 import br.avcaliani.hello_flink.cli.Args;
 
+import java.io.Serializable;
 import java.util.Random;
 
-public abstract class Pipeline {
+public abstract class Pipeline implements Serializable {
 
     public Pipeline init(String pipelineName) {
         System.out.println("-------------------------------");
