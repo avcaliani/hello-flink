@@ -1,8 +1,11 @@
 package br.avcaliani.hello_flink.pipelines;
 
 import br.avcaliani.hello_flink.cli.Args;
+import br.avcaliani.hello_flink.helpers.MyDeserializer;
+import br.avcaliani.hello_flink.models.Transaction;
 import br.avcaliani.hello_flink.models.User;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.connector.file.src.FileSource;
@@ -16,6 +19,15 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.dataformat.csv.Csv
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
+import java.io.IOException;
+
+/** This Pipeline reads the data from a Kafka stream, enrich the data and output to another topic.
+ * </br>
+ * Here's the guide I used to create this 👉
+ * <a href="https://nightlies.apache.org/flink/flink-docs-master/docs/connectors/datastream/kafka/">
+ *     Doc: Apache Flink + Kafka Connector
+ * </a>
+ */
 public class InvalidTransactions extends Pipeline {
 
     private static final String KAFKA_TOPIC = "DONU_TRANSACTIONS_V1";
@@ -24,20 +36,20 @@ public class InvalidTransactions extends Pipeline {
     @Override
     public Pipeline run(Args args) throws Exception {
         var env = args.getEnv();
-        var transactions = this.readTransactions(env, args.getKafkaBrokers());
+        var transactions = readTransactions(env, args.getKafkaBrokers());
         transactions.print();
         env.execute("hello-flink--invalid-transactions");
         return this;
     }
 
-    private DataStream<String> readTransactions(StreamExecutionEnvironment env, String brokers) {
+    private DataStream<Transaction> readTransactions(StreamExecutionEnvironment env, String brokers) {
 
-        KafkaSource<String> source = KafkaSource.<String>builder()
+        KafkaSource<Transaction> source = KafkaSource.<Transaction>builder()
                 .setBootstrapServers(brokers)
                 .setTopics(KAFKA_TOPIC)
                 .setGroupId(KAFKA_GROUP_ID)
                 .setStartingOffsets(OffsetsInitializer.earliest())
-                .setValueOnlyDeserializer(new SimpleStringSchema())
+                .setValueOnlyDeserializer(new MyDeserializer<>(Transaction.class))
                 .build();
 
         return env.fromSource(source, WatermarkStrategy.noWatermarks(), "kafka-source--donu-txn-v1");
