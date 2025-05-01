@@ -14,6 +14,13 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.dataformat.csv.Csv
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
+/** This Pipeline reads a CSV file, manipulated the data and print the result.
+ * </br>
+ * Here's the guide I used to create this 👉
+ * <a href="https://nightlies.apache.org/flink/flink-docs-master/docs/connectors/datastream/formats/csv/">
+ *     Doc: Apache Flink + CSV
+ * </a>
+ */
 public class Dummy extends Pipeline {
 
     @Override
@@ -51,6 +58,9 @@ public class Dummy extends Pipeline {
                 .forRecordStreamFormat(format, new Path(path))
                 .build();
 
+        /* What is a watermark?
+         * https://www.decodable.co/blog/understanding-apache-flink-event-time-and-watermarks
+         */
         return env.fromSource(
                 fileSource,
                 WatermarkStrategy.noWatermarks(),
@@ -65,6 +75,9 @@ public class Dummy extends Pipeline {
      * @return User email.
      */
     private String buildEmail(String name) {
-        return name.toLowerCase().replaceAll(" ", ".") + "@github.com";
+        return name.toLowerCase()
+                .replaceAll("\\.", "")
+                .replaceAll(" ", ".")
+                + "@github.com";
     }
 }
