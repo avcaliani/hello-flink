@@ -53,6 +53,7 @@ docker compose exec flink-dev /opt/flink/bin/flink run \
 docker compose exec flink-dev /opt/flink/bin/flink run \
   "hello-flink-1.0.0-uber.jar" \
   --pipeline "invalid-transactions" \
+  --bucket "/data" \
   --kafka-brokers "kafka-dev:29092"
 ```
 
