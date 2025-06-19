@@ -47,8 +47,8 @@ public class Dummy extends Pipeline {
     private DataStream<User> readUsers(StreamExecutionEnvironment env, String path) {
 
         var schema = CsvSchema.builder()
-                .addColumn(new Column(0, "user_id", ColumnType.STRING))
-                .addColumn(new Column(1, "user_name", ColumnType.STRING))
+                .addColumn(new Column(0, "id", ColumnType.STRING))
+                .addColumn(new Column(1, "name", ColumnType.STRING))
                 .setColumnSeparator(',')
                 .setUseHeader(true)
                 .build();
