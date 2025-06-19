@@ -19,6 +19,6 @@ public class App {
         pipeline
             .init(pipelineName)
             .run(args)
-            .sunset();
+            .sunset(pipelineName);
     }
 }
