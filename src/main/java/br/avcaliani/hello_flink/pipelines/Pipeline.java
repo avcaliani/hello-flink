@@ -1,16 +1,23 @@
 package br.avcaliani.hello_flink.pipelines;
 
 import br.avcaliani.hello_flink.cli.Args;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.Random;
 
 public abstract class Pipeline implements Serializable {
 
+    private static final String SEP = "\n-------------------------------------\n";
+    private final Logger log;
+
+    public Pipeline() {
+        this.log = LoggerFactory.getLogger(this.getClass());
+    }
+
     public Pipeline init(String pipelineName) {
-        System.out.println("-------------------------------");
-        System.out.println(" Starting '" + pipelineName + "' pipeline " + emoji());
-        System.out.println("-------------------------------");
+        log.info("{} Starting Pipeline: '{}' {} {}", SEP, pipelineName, emoji(), SEP);
         return this;
     }
 
@@ -24,10 +31,8 @@ public abstract class Pipeline implements Serializable {
      */
     public abstract Pipeline run(Args args) throws Exception;
 
-    public void sunset() {
-        System.out.println("-------------------------------");
-        System.out.println(" Pipeline finished \"\uD83C\uDF04\"");
-        System.out.println("-------------------------------");
+    public void sunset(String pipelineName) {
+        log.info("{} Pipeline Finished: '{}' 🌇 {}", SEP, pipelineName, SEP);
     }
 
     private String emoji() {
