@@ -7,13 +7,20 @@ import br.avcaliani.hello_flink.models.Transaction;
 import br.avcaliani.hello_flink.models.User;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.state.BroadcastState;
+import org.apache.flink.api.common.state.MapStateDescriptor;
+import org.apache.flink.api.common.state.ReadOnlyBroadcastState;
 import org.apache.flink.connector.file.src.FileSource;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.formats.csv.CsvReaderFormat;
+import org.apache.flink.streaming.api.datastream.BroadcastStream;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+
+import org.apache.flink.streaming.api.functions.co.BroadcastProcessFunction;
+import org.apache.flink.util.Collector;
 
 
 /**
@@ -31,16 +38,58 @@ public class InvalidTransactions extends Pipeline {
 
     @Override
     public Pipeline run(Args args) throws Exception {
+
         var env = args.getEnv();
         var users = readUsers(env, args.getBucket() + "/raw/users/");
         var transactions = readTransactions(env, args.getKafkaBrokers());
-        transactions
-                .map((MapFunction<Transaction, RichTransaction>) RichTransaction::new)
+
+        joinData(transactions, users)
                 .print();
 
-        // TODO: Try to use connect, instead of join.
         env.execute("hello-flink--invalid-transactions");
         return this;
+    }
+
+    // TODO: Refine this code, not sure if it works!
+    // TODO: Explain why I'm using connect and not a window join.
+    private DataStream<RichTransaction> joinData(DataStream<Transaction> transactions, DataStream<User> users) {
+        MapStateDescriptor<String, User> userStateDescriptor =
+                new MapStateDescriptor<>("userBroadcastState", String.class, User.class);
+
+        BroadcastStream<User> broadcastUserStream = users.broadcast(userStateDescriptor);
+        return transactions
+                .connect(broadcastUserStream)
+                .process(new BroadcastProcessFunction<Transaction, User, RichTransaction>() {
+
+                    @Override
+                    public void processBroadcastElement(User user, Context ctx, Collector<RichTransaction> out) throws Exception {
+                        BroadcastState<String, User> userState = ctx.getBroadcastState(userStateDescriptor);
+                        userState.put(user.getId(), user);
+                    }
+
+                    @Override
+                    public void processElement(
+                            Transaction txn,
+                            ReadOnlyContext ctx,
+                            Collector<RichTransaction> out
+                    ) throws Exception {
+
+                        ReadOnlyBroadcastState<String, User> userState = ctx.getBroadcastState(userStateDescriptor);
+                        User sender = userState.get(txn.getFrom());
+                        User receiver = userState.get(txn.getTo());
+
+                        if (sender == null || receiver == null) {
+                            log.warn("Missing user(s) for transaction: {}", txn);
+                            return;
+                        }
+
+                        var richTxn = new RichTransaction(txn);
+                        richTxn.setFrom(sender);
+                        richTxn.setTo(receiver);
+                        out.collect(richTxn);
+                    }
+
+                });
     }
 
     /**

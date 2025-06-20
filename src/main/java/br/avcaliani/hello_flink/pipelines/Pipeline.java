@@ -10,7 +10,7 @@ import java.util.Random;
 public abstract class Pipeline implements Serializable {
 
     private static final String SEP = "\n-------------------------------------\n";
-    private final Logger log;
+    final Logger log;
 
     public Pipeline() {
         this.log = LoggerFactory.getLogger(this.getClass());
