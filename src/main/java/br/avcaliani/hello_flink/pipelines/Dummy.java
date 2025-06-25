@@ -1,7 +1,8 @@
 package br.avcaliani.hello_flink.pipelines;
 
 import br.avcaliani.hello_flink.cli.Args;
-import br.avcaliani.hello_flink.models.User;
+import br.avcaliani.hello_flink.models.in.User;
+import br.avcaliani.hello_flink.models.out.DTOUser;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -28,11 +29,12 @@ public class Dummy extends Pipeline {
         var env = args.getEnv();
         var filePath = args.getBucket() + "/raw/users/";
         var users = this.readUsers(env, filePath);
-        users.map((MapFunction<User, User>) user -> {
-                    user.setEmail(buildEmail(user.getName()));
-                    return user;
-                })
-                .print();
+        users.map((MapFunction<User, DTOUser>) user -> {
+            var dto = new DTOUser(user);
+            dto.setEmail(buildEmail(user.getName()));
+            return dto;
+        })
+        .print();
         env.execute("hello-flink--dummy");
         return this;
     }
