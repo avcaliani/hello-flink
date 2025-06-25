@@ -1,4 +1,4 @@
-package br.avcaliani.hello_flink.models;
+package br.avcaliani.hello_flink.models.in;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

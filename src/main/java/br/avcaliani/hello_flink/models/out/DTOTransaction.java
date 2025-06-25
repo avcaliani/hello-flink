@@ -1,37 +1,41 @@
-package br.avcaliani.hello_flink.models;
+package br.avcaliani.hello_flink.models.out;
 
+import br.avcaliani.hello_flink.models.in.Transaction;
+import br.avcaliani.hello_flink.models.in.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class RichTransaction {
+public class DTOTransaction {
 
     @JsonProperty("transaction_id")
     private String id;
     private String timestamp;
-    private User from;
-    private User to;
+    private User sender;
+    private User receiver;
     private String currency;
     private Double amount;
     private Double fee;
-    private Boolean isValid;
+    private Boolean isValid = true;
 
     @JsonIgnore
-    private String fromId;
+    private String from;
     @JsonIgnore
-    private String toId;
+    private String to;
 
-    public RichTransaction(Transaction tx) {
+    public DTOTransaction(Transaction tx, User sender, User receiver) {
         // Core Fields
         this.id = tx.getId();
         this.timestamp = tx.getTimestamp();
         this.currency = tx.getCurrency();
         this.amount = tx.getAmount();
         this.fee = tx.getFee();
+        this.sender = sender;
+        this.receiver = receiver;
         // Helper Fields
-        this.fromId = tx.getFrom();
-        this.toId = tx.getTo();
+        this.from = tx.getFrom();
+        this.to = tx.getTo();
     }
 
 }

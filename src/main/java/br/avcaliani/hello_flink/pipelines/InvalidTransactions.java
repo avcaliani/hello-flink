@@ -2,23 +2,22 @@ package br.avcaliani.hello_flink.pipelines;
 
 import br.avcaliani.hello_flink.cli.Args;
 import br.avcaliani.hello_flink.helpers.MyDeserializer;
-import br.avcaliani.hello_flink.models.RichTransaction;
-import br.avcaliani.hello_flink.models.Transaction;
-import br.avcaliani.hello_flink.models.User;
+import br.avcaliani.hello_flink.models.in.Transaction;
+import br.avcaliani.hello_flink.models.in.User;
+import br.avcaliani.hello_flink.models.out.DTOTransaction;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.state.BroadcastState;
 import org.apache.flink.api.common.state.MapStateDescriptor;
-import org.apache.flink.api.common.state.ReadOnlyBroadcastState;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.connector.file.src.FileSource;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.formats.csv.CsvReaderFormat;
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import org.apache.flink.streaming.api.datastream.BroadcastStream;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-
 import org.apache.flink.streaming.api.functions.co.BroadcastProcessFunction;
 import org.apache.flink.util.Collector;
 
@@ -44,52 +43,11 @@ public class InvalidTransactions extends Pipeline {
         var transactions = readTransactions(env, args.getKafkaBrokers());
 
         joinData(transactions, users)
+                .map(isTxnValid())
                 .print();
 
         env.execute("hello-flink--invalid-transactions");
         return this;
-    }
-
-    // TODO: Refine this code, not sure if it works!
-    // TODO: Explain why I'm using connect and not a window join.
-    private DataStream<RichTransaction> joinData(DataStream<Transaction> transactions, DataStream<User> users) {
-        MapStateDescriptor<String, User> userStateDescriptor =
-                new MapStateDescriptor<>("userBroadcastState", String.class, User.class);
-
-        BroadcastStream<User> broadcastUserStream = users.broadcast(userStateDescriptor);
-        return transactions
-                .connect(broadcastUserStream)
-                .process(new BroadcastProcessFunction<Transaction, User, RichTransaction>() {
-
-                    @Override
-                    public void processBroadcastElement(User user, Context ctx, Collector<RichTransaction> out) throws Exception {
-                        BroadcastState<String, User> userState = ctx.getBroadcastState(userStateDescriptor);
-                        userState.put(user.getId(), user);
-                    }
-
-                    @Override
-                    public void processElement(
-                            Transaction txn,
-                            ReadOnlyContext ctx,
-                            Collector<RichTransaction> out
-                    ) throws Exception {
-
-                        ReadOnlyBroadcastState<String, User> userState = ctx.getBroadcastState(userStateDescriptor);
-                        User sender = userState.get(txn.getFrom());
-                        User receiver = userState.get(txn.getTo());
-
-                        if (sender == null || receiver == null) {
-                            log.warn("Missing user(s) for transaction: {}", txn);
-                            return;
-                        }
-
-                        var richTxn = new RichTransaction(txn);
-                        richTxn.setFrom(sender);
-                        richTxn.setTo(receiver);
-                        out.collect(richTxn);
-                    }
-
-                });
     }
 
     /**
@@ -106,7 +64,7 @@ public class InvalidTransactions extends Pipeline {
                 .setTopics(KAFKA_TOPIC)
                 .setGroupId(KAFKA_GROUP_ID)
                 .setStartingOffsets(OffsetsInitializer.earliest())
-                .setValueOnlyDeserializer(new MyDeserializer<>(Transaction.class))
+                .setDeserializer(new MyDeserializer<>(Transaction.class))
                 .build();
 
         return env.fromSource(source, WatermarkStrategy.noWatermarks(), "kafka-source--donu-txn-v1");
@@ -121,15 +79,85 @@ public class InvalidTransactions extends Pipeline {
      */
     private DataStream<User> readUsers(StreamExecutionEnvironment env, String path) {
 
-        var fileSource = FileSource
-                .forRecordStreamFormat(CsvReaderFormat.forPojo(User.class), new Path(path))
-                .build();
+        CsvReaderFormat<User> csvFormat = CsvReaderFormat.forSchema(
+                CsvMapper::new,
+                csvMapper ->
+                        csvMapper.schemaFor(User.class)
+                                .withoutQuoteChar()
+                                .withColumnSeparator(','),
+                TypeInformation.of(User.class)
+        );
 
         return env.fromSource(
-                fileSource,
+                FileSource.forRecordStreamFormat(csvFormat, new Path(path)).build(),
                 WatermarkStrategy.noWatermarks(),
                 "csv-source--users"
         );
     }
 
+
+    /**
+     * It enriches the transaction data adding the user information for receiver and sender.
+     *
+     * @param transactions Transactions Stream.
+     * @param users        Users Stream.
+     * @return Enriched Transaction Data.
+     */
+    private DataStream<DTOTransaction> joinData(DataStream<Transaction> transactions, DataStream<User> users) {
+        var userStateDescriptor = new MapStateDescriptor<>("userBroadcastState", String.class, User.class);
+        BroadcastStream<User> broadcastUserStream = users.broadcast(userStateDescriptor);
+        // TODO: Explain why I'm using connect and not a window join.
+        return transactions
+                .connect(broadcastUserStream)
+                .process(new EnrichTxnFunction(userStateDescriptor));
+    }
+
+    /**
+     * Check and update the traction "isValid" field.
+     *
+     * @return Updated Transaction.
+     */
+    private MapFunction<DTOTransaction, DTOTransaction> isTxnValid() {
+        return txn -> {
+            var isValid = txn.getSender() != null && txn.getReceiver() != null;
+            if (!isValid)
+                log.warn("missing user(s) for transaction: {}", txn);
+            txn.setIsValid(isValid);
+            return txn;
+        };
+    }
+
+    /**
+     * This class is the broadcast process function.
+     * <p>
+     * It will enrich the transaction entity with user entity data.
+     * <p>
+     * Here's the guide I used to create this 👉
+     * <a href="https://nightlies.apache.org/flink/flink-docs-master/docs/dev/datastream/fault-tolerance/broadcast_state/">
+     * Doc: Apache Flink - The Broadcast State Pattern
+     * </a>
+     */
+    private static class EnrichTxnFunction extends BroadcastProcessFunction<Transaction, User, DTOTransaction> {
+
+        private final MapStateDescriptor<String, User> descriptor;
+
+        EnrichTxnFunction(MapStateDescriptor<String, User> descriptor) {
+            this.descriptor = descriptor;
+        }
+
+        @Override
+        public void processBroadcastElement(User user, Context ctx, Collector<DTOTransaction> out) throws Exception {
+            var userState = ctx.getBroadcastState(this.descriptor);
+            userState.put(user.getId(), user);
+        }
+
+        @Override
+        public void processElement(Transaction txn, ReadOnlyContext ctx, Collector<DTOTransaction> out) throws Exception {
+            var userState = ctx.getBroadcastState(this.descriptor);
+            User sender = userState.get(txn.getFrom());
+            User receiver = userState.get(txn.getTo());
+            out.collect(new DTOTransaction(txn, sender, receiver));
+        }
+
+    }
 }

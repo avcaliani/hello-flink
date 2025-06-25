@@ -1,8 +1,10 @@
 package br.avcaliani.hello_flink.helpers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.connector.kafka.source.reader.deserializer.KafkaRecordDeserializationSchema;
+import org.apache.flink.util.Collector;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.io.IOException;
 
@@ -19,7 +21,7 @@ import java.io.IOException;
  *
  * @param <T> The class you want to deserialize.
  */
-public class MyDeserializer<T> implements DeserializationSchema<T> {
+public class MyDeserializer<T> implements KafkaRecordDeserializationSchema<T> {
 
     private final ObjectMapper objectMapper;
     private final Class<T> classType;
@@ -29,19 +31,14 @@ public class MyDeserializer<T> implements DeserializationSchema<T> {
         this.classType = classType;
     }
 
-
-    @Override
-    public T deserialize(byte[] message) throws IOException {
-        return objectMapper.readValue(message, this.classType);
-    }
-
-    @Override
-    public boolean isEndOfStream(T userEvent) {
-        return false;
-    }
-
     @Override
     public TypeInformation<T> getProducedType() {
         return TypeInformation.of(this.classType);
+    }
+
+    @Override
+    public void deserialize(ConsumerRecord<byte[], byte[]> record, Collector<T> out) throws IOException {
+        var msgPayload = objectMapper.readValue(record.value(), this.classType);
+        out.collect(msgPayload);
     }
 }
