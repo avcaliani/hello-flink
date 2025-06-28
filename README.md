@@ -34,27 +34,16 @@ Then, start **kafka producer** ([ref](https://github.com/avcaliani/kafka-in-dock
 docker compose exec kafka-dev /opt/scripts/donu-transactions.sh
 ```
 
-Finally, **build and run** the application 👇
+Finally, **run** the application 👇
 
 ```bash
-# Jar file will be at "build/libs/hello-flink-*-uber.jar"
-./gradlew uberJar
-
 # Dummy Pipeline 👇
 #   Pretty simple pipeline, it just prints the list of customer in a CSV file. 
-docker compose exec flink-dev /opt/flink/bin/flink run \
-  "hello-flink-1.0.0-uber.jar" \
-  --pipeline "dummy" \
-  --bucket "/data"
+./run.sh --dummy
   
 # Invalid Transactions Pipeline 👇
-#   Classify the transactions as correct/incorrect, enrich and 
-#   forward them to another topic, check the diagram.
-docker compose exec flink-dev /opt/flink/bin/flink run \
-  "hello-flink-1.0.0-uber.jar" \
-  --pipeline "invalid-transactions" \
-  --bucket "/data" \
-  --kafka-brokers "kafka-dev:29092"
+#   Classify the transactions as correct/incorrect, enrich and forward them to another topic, check the diagram.
+./run.sh --invalid-transactions
 ```
 
 ![diagram](.docs/invalid-txn-diagram.png)
