@@ -1,0 +1,7 @@
+# Kafka UI Config
+# I'm creating this config so you don't have to register the Kafka cluster
+# everytime you up the UI.
+kafka:
+  clusters:
+    - name: kafka-dev-cluster
+      bootstrapServers: kafka-dev:29092
