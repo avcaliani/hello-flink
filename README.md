@@ -10,44 +10,92 @@ My repository with [Apache Flink](https://flink.apache.org) learnings.
 
 ### Quick Start
 
-Then, **download the data** 👇 
+01 - **Download** user mocked data.
 
 ```bash
-# Download the data 
 mkdir -p data/raw/users
 curl -o "data/raw/users/users.csv" \
   "https://raw.githubusercontent.com/avcaliani/kafka-in-docker/refs/heads/main/scripts/users.csv"
 ```
 
-Then, start **flink server** 👇
+02 - Start the containers 🐳
 
 ```bash
 # 💡 To stop just type `docker compose down`
 docker compose up -d
 ```
 
-> You can check Flink UI here 👉 http://localhost:8081
+> 💡 [Reference](https://nightlies.apache.org/flink/flink-docs-release-2.0/docs/try-flink/local_installation/)
 
-Then, start **kafka producer** ([ref](https://github.com/avcaliani/kafka-in-docker/tree/main/scripts)) 👇
+03 - Start **kafka producer** ([ref](https://github.com/avcaliani/kafka-in-docker/tree/main/scripts)) 👇
 
 ```bash
 docker compose exec kafka-dev /opt/scripts/donu-transactions.sh
 ```
 
-Finally, **run** the application 👇
+04 - **Run** the application
 
 ```bash
-# Dummy Pipeline 👇
+# Pipeline - Dummy
 #   Pretty simple pipeline, it just prints the list of customer in a CSV file. 
 ./run.sh --pipeline "dummy" --bucket "/data"
   
-# Invalid Transactions Pipeline 👇
-#   Classify the transactions as correct/incorrect, enrich and forward them to another topic, check the diagram.
+# Pipeline - Invalid Transactions
+#   Classify the transactions as correct/incorrect, 
+#   enrich and forward them to another topic, check the diagram.
 ./run.sh --pipeline "invalid-transactions" \
       --bucket "/data" \
       --kafka-brokers "kafka-dev:29092"
 ```
 
-![diagram](.docs/invalid-txn-diagram.png)
+#### Pipeline - Invalid Transactions 
 
-> 💡 [Reference](https://nightlies.apache.org/flink/flink-docs-release-2.0/docs/try-flink/local_installation/)
+```mermaid
+---
+config:
+  theme: 'base'
+  themeVariables:
+    primaryColor: '#f6f8fa'
+    primaryTextColor: '#24292f'
+    primaryBorderColor: '#d0d7de'
+    lineColor: '#0969da'
+    secondaryColor: '#afb8c1'
+    tertiaryColor: '#ddf4ff'
+    background: '#ffffff'
+    edgeLabelBackground: '#ffffff'
+---
+graph TD
+    app_txn s01@-->|publishes transactions| q_txn_v1
+
+    q_txn_v1 s02@--> app_flink
+    st_user --> app_flink
+
+    app_flink s03@-->|valid data| st_txn
+    app_flink s04@-->|invalid data| q_dead_letter
+
+%% ----------------------------------------
+%%  Style
+%% ----------------------------------------
+
+%% Applications
+app_txn@{ shape: rounded, label: "Txn Service" }
+app_flink@{ shape: rounded, label: "🐿️ Flink App" }
+
+%% Queues
+q_txn_v1@{ shape: das, label: "donu_txn_v1" }
+q_dead_letter@{ shape: das, label: "dead_letter" }
+
+%% Storage
+st_user@{ shape: disk, label: "users.csv" }
+st_txn@{ shape: disk, label: "txn.avro" }
+
+%% Animation
+s01@{ animate: true }
+s02@{ animate: true }
+s03@{ animate: true }
+s04@{ animate: true }
+
+%% Arrow Colors
+linkStyle 3 stroke:#00b894
+linkStyle 4 stroke:#d63031
+```
