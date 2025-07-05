@@ -2,35 +2,26 @@
 
 JAR_FILE="hello-flink-1.0.0-uber.jar"
 
-# Jar file will be at "build/libs/hello-flink-*-uber.jar"
-function build() {
-  ./gradlew uberJar
-  printf "\n🐿️Flink Dashboard ➜ http://localhost:8081\n\n"
+function bold() {
+  printf "\e[1m$1\e[m"
 }
 
-case "$1" in
-  --dummy)
-    build
-    docker compose exec flink-dev /opt/flink/bin/flink run "$JAR_FILE" \
-      --pipeline "dummy" \
-      --bucket "/data"
-    ;;
-  --invalid-transactions)
-    build
-    docker compose exec flink-dev /opt/flink/bin/flink run "$JAR_FILE" \
-      --pipeline "invalid-transactions" \
-      --bucket "/data" \
-      --kafka-brokers "kafka-dev:29092"
-    ;;
-  --read-topic)
-    topic="$2"
-    docker compose exec kafka-dev kafka-console-consumer.sh \
-        --bootstrap-server "localhost:9092" \
-        --topic "$topic" \
-        --from-beginning
-    ;;
-  *)
-    echo "Invalid option: $1 ❌"
-    exit 1
-    ;;
-esac
+# Jar file will be at "build/libs/hello-flink-*-uber.jar"
+function build_jar() {
+  ./gradlew uberJar
+}
+
+printf "+------------------------------------------+\n"
+printf "| 🐿 %s                       |\n" "$(bold "Hello Flink App")"
+printf "| Kafka UI        ➜ http://localhost:8080  |\n"
+printf "| Flink Dashboard ➜ http://localhost:8081  |\n"
+printf "+------------------------------------------+\n\n"
+
+printf "📦 %s\n" "$(bold "Building jar file...")"
+build_jar
+
+printf "\n🚀 %s\n" "$(bold "Starting application...")"
+docker compose exec flink-dev /opt/flink/bin/flink run "$JAR_FILE" "$@"
+
+exit 0
+
