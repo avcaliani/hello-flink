@@ -39,11 +39,13 @@ Finally, **run** the application 👇
 ```bash
 # Dummy Pipeline 👇
 #   Pretty simple pipeline, it just prints the list of customer in a CSV file. 
-./run.sh --dummy
+./run.sh --pipeline "dummy" --bucket "/data"
   
 # Invalid Transactions Pipeline 👇
 #   Classify the transactions as correct/incorrect, enrich and forward them to another topic, check the diagram.
-./run.sh --invalid-transactions
+./run.sh --pipeline "invalid-transactions" \
+      --bucket "/data" \
+      --kafka-brokers "kafka-dev:29092"
 ```
 
 ![diagram](.docs/invalid-txn-diagram.png)
