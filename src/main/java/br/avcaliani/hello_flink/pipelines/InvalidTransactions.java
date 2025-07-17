@@ -7,13 +7,18 @@ import br.avcaliani.hello_flink.models.in.User;
 import br.avcaliani.hello_flink.models.out.DTOTransaction;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.file.src.FileSource;
+import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
+import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.formats.csv.CsvReaderFormat;
+import org.apache.flink.formats.json.JsonSerializationSchema;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import org.apache.flink.streaming.api.datastream.BroadcastStream;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -33,6 +38,7 @@ import org.apache.flink.util.Collector;
 public class InvalidTransactions extends Pipeline {
 
     private static final String KAFKA_TOPIC = "DONU_TRANSACTIONS_V1";
+    private static final String KAFKA_DEAD_LETTER = "DLQ_DONU_TRANSACTIONS_V1";
     private static final String KAFKA_GROUP_ID = "hello-flink--invalid-txn-pipeline";
 
     @Override
@@ -46,7 +52,22 @@ public class InvalidTransactions extends Pipeline {
                 .map(isTxnValid());
 
         richTxn.filter(DTOTransaction::isValid).print();
-        richTxn.filter(DTOTransaction::isInvalid).print();
+
+        // https://nightlies.apache.org/flink/flink-docs-release-2.0/docs/connectors/datastream/formats/json/
+        JsonSerializationSchema<DTOTransaction> jsonFormat =new JsonSerializationSchema<>();
+        // https://nightlies.apache.org/flink/flink-docs-master/docs/connectors/datastream/kafka/
+        var sink = KafkaSink.<DTOTransaction>builder()
+                .setBootstrapServers(args.getKafkaBrokers())
+                .setRecordSerializer(
+                        KafkaRecordSerializationSchema.builder()
+                        .setTopic(KAFKA_DEAD_LETTER)
+                        .setValueSerializationSchema(jsonFormat)
+                        .build()
+                )
+                .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
+                .build();
+
+        richTxn.filter(DTOTransaction::isInvalid).sinkTo(sink);
 
         env.execute("hello-flink--invalid-transactions");
         return this;
@@ -132,7 +153,7 @@ public class InvalidTransactions extends Pipeline {
 
             var errors = txn.getErrors();
             if (isMissingUser)
-                errors.add("missing user(s) for transaction.");
+                errors.add("missing user(s) for transaction (from:" + txn.getFrom() + "-> to: " + txn.getTo() + ").");
 
             if (isSameUser)
                 errors.add("transaction have the same user as sender and receiver.");
