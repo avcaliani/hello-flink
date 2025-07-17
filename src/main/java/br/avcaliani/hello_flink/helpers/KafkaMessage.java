@@ -26,11 +26,6 @@ public abstract class KafkaMessage {
         this.headers = addDefaultHeaders(headers);
     }
 
-    /**
-     * Parses a Map of key/value pairs into the expected Kafka Headers type.
-     *
-     * @return Set of Headers.
-     */
     private static Headers addDefaultHeaders(Headers headers) {
         headers.add("content-type", "application/json".getBytes(UTF_8));
         headers.add("data-platform", "flink".getBytes(UTF_8));
