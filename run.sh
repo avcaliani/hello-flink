@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 JAR_FILE="hello-flink-1.0.0-uber.jar"
 
