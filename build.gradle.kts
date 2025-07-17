@@ -31,7 +31,6 @@ dependencies {
 
     // Kafka Connector
     implementation("org.apache.flink:flink-connector-kafka:4.0.0-2.0")
-    compileOnly("org.apache.flink:flink-json:2.0.0")
 
     // Lombok
     implementation("org.projectlombok:lombok:1.18.36")
@@ -54,8 +53,7 @@ tasks.register<Jar>("uberJar") {
             // Exclude the "provided" dependency
             !it.name.contains("flink-streaming-java") &&
                     !it.name.contains("flink-csv") &&
-                    !it.name.contains("flink-connector-files") &&
-                    !it.name.contains("flink-json")
+                    !it.name.contains("flink-connector-files")
         }.map {
             if (it.isDirectory) it else zipTree(it)
         }
