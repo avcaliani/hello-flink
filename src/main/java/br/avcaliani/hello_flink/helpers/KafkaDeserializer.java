@@ -1,6 +1,8 @@
 package br.avcaliani.hello_flink.helpers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.connector.kafka.source.reader.deserializer.KafkaRecordDeserializationSchema;
 import org.apache.flink.util.Collector;
@@ -8,8 +10,10 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.io.IOException;
 
+import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
+
 /**
- * My generic deserializer for POJOs.
+ * My generic Kafka deserializer from JSON to POJOs.
  * <p>
  * When reading Kafka topics, at first I was using the <code>new SimpleStringSchema()</code>,
  * however I'd like to manipulate the data, being easier to use a POJO.
@@ -21,13 +25,17 @@ import java.io.IOException;
  *
  * @param <T> The class you want to deserialize.
  */
-public class MyDeserializer<T> implements KafkaRecordDeserializationSchema<T> {
+public class KafkaDeserializer<T extends KafkaMessage> implements KafkaRecordDeserializationSchema<T> {
 
-    private final ObjectMapper objectMapper;
+    private static final ObjectMapper OBJECT_MAPPER =
+            JsonMapper.builder()
+                    .build()
+                    .registerModule(new JavaTimeModule())
+                    .configure(WRITE_DATES_AS_TIMESTAMPS, false);
+
     private final Class<T> classType;
 
-    public MyDeserializer(Class<T> classType) {
-        this.objectMapper = new ObjectMapper();
+    public KafkaDeserializer(Class<T> classType) {
         this.classType = classType;
     }
 
@@ -38,7 +46,9 @@ public class MyDeserializer<T> implements KafkaRecordDeserializationSchema<T> {
 
     @Override
     public void deserialize(ConsumerRecord<byte[], byte[]> record, Collector<T> out) throws IOException {
-        var msgPayload = objectMapper.readValue(record.value(), this.classType);
+        var msgPayload = OBJECT_MAPPER.readValue(record.value(), this.classType);
+        msgPayload.setKey(record.key());
+        msgPayload.setHeaders(record.headers());
         out.collect(msgPayload);
     }
 }
