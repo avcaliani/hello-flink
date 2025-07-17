@@ -59,7 +59,20 @@ public class ValidateTransactions extends Pipeline {
 
         richTxn.filter(DTOTransaction::isInvalid).sinkTo(dlqSink);
 
-        richTxn.filter(DTOTransaction::isValid).print();
+        // Kafka brokers by default have transaction.max.timeout.ms set to 15 minutes.
+        // This property will not allow to set transaction timeouts for the producers larger than its value.
+        // FlinkKafkaProducer by default sets the transaction.timeout.ms property in producer config to 1 hour,
+        // thus transaction.max.timeout.ms should be increased before using the Semantic.EXACTLY_ONCE mode.
+        // Ref: https://nightlies.apache.org/flink/flink-docs-release-1.13/docs/connectors/datastream/kafka/
+        var validSink = KafkaSink.<DTOTransaction>builder()
+                .setBootstrapServers(args.getKafkaBrokers())
+                .setRecordSerializer(new KafkaSerializer<>(KAFKA_OUT_TOPIC))
+                // https://flink.apache.org/2018/02/28/an-overview-of-end-to-end-exactly-once-processing-in-apache-flink-with-apache-kafka-too/
+                .setDeliveryGuarantee(DeliveryGuarantee.EXACTLY_ONCE)
+                .setProperty("transaction.timeout.ms", "900000")
+                .setTransactionalIdPrefix("flink-valid-txn") // Mandatory when using Exactly Once
+                .build();
+        richTxn.filter(DTOTransaction::isValid).sinkTo(validSink);
 
         env.execute("hello-flink--validate-transactions");
         return this;
