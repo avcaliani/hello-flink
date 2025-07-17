@@ -43,10 +43,12 @@ public class DTOTransaction {
         this.to = tx.getTo();
     }
 
+    @JsonIgnore
     public boolean isValid() {
         return isValid;
     }
 
+    @JsonIgnore
     public boolean isInvalid() {
         return !isValid;
     }
