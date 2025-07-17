@@ -1,8 +1,8 @@
 package br.avcaliani.hello_flink.pipelines;
 
 import br.avcaliani.hello_flink.cli.Args;
-import br.avcaliani.hello_flink.helpers.KafkaDeserializer;
-import br.avcaliani.hello_flink.helpers.KafkaSerializer;
+import br.avcaliani.hello_flink.infra.serializers.KafkaDeserializer;
+import br.avcaliani.hello_flink.infra.serializers.KafkaSerializer;
 import br.avcaliani.hello_flink.models.in.Transaction;
 import br.avcaliani.hello_flink.models.in.User;
 import br.avcaliani.hello_flink.models.out.DTOTransaction;

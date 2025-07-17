@@ -1,6 +1,6 @@
 package br.avcaliani.hello_flink.models.out;
 
-import br.avcaliani.hello_flink.helpers.KafkaMessage;
+import br.avcaliani.hello_flink.infra.serializers.KafkaMessage;
 import br.avcaliani.hello_flink.models.in.Transaction;
 import br.avcaliani.hello_flink.models.in.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;

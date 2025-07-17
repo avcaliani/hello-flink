@@ -1,4 +1,4 @@
-package br.avcaliani.hello_flink.helpers;
+package br.avcaliani.hello_flink.infra.serializers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
