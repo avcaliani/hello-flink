@@ -6,6 +6,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 @Data
 public class DTOTransaction {
 
@@ -18,6 +22,7 @@ public class DTOTransaction {
     private Double amount;
     private Double fee;
     private Boolean isValid = true;
+    private List<String> errors = new ArrayList<>();
 
     @JsonIgnore
     private String from;
@@ -38,4 +43,24 @@ public class DTOTransaction {
         this.to = tx.getTo();
     }
 
+    public boolean isValid() {
+        return isValid;
+    }
+
+    public boolean isInvalid() {
+        return !isValid;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass())
+            return false;
+        DTOTransaction that = (DTOTransaction) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 }

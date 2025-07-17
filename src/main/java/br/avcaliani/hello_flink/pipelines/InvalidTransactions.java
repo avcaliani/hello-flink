@@ -42,9 +42,11 @@ public class InvalidTransactions extends Pipeline {
         var users = readUsers(env, args.getBucket() + "/raw/users/");
         var transactions = readTransactions(env, args.getKafkaBrokers());
 
-        joinData(transactions, users)
-                .map(isTxnValid())
-                .print();
+        var richTxn = joinData(transactions, users)
+                .map(isTxnValid());
+
+        richTxn.filter(DTOTransaction::isValid).print();
+        richTxn.filter(DTOTransaction::isInvalid).print();
 
         env.execute("hello-flink--invalid-transactions");
         return this;
@@ -119,10 +121,22 @@ public class InvalidTransactions extends Pipeline {
      */
     private MapFunction<DTOTransaction, DTOTransaction> isTxnValid() {
         return txn -> {
-            var isValid = txn.getSender() != null && txn.getReceiver() != null;
-            if (!isValid)
-                log.warn("missing user(s) for transaction: {}", txn);
+
+            var isMissingUser = txn.getSender() == null || txn.getReceiver() == null;
+            var isSameUser = txn.getSender() == txn.getReceiver();
+            var isValid = !isMissingUser && !isSameUser;
+
             txn.setIsValid(isValid);
+            if (isValid)
+                return txn;
+
+            var errors = txn.getErrors();
+            if (isMissingUser)
+                errors.add("missing user(s) for transaction.");
+
+            if (isSameUser)
+                errors.add("transaction have the same user as sender and receiver.");
+
             return txn;
         };
     }
