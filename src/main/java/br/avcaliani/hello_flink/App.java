@@ -2,7 +2,7 @@ package br.avcaliani.hello_flink;
 
 import br.avcaliani.hello_flink.cli.ArgParser;
 import br.avcaliani.hello_flink.pipelines.Dummy;
-import br.avcaliani.hello_flink.pipelines.InvalidTransactions;
+import br.avcaliani.hello_flink.pipelines.ValidateTransactions;
 
 public class App {
 
@@ -13,7 +13,7 @@ public class App {
 
         var pipeline = switch (pipelineName) {
             case "dummy" -> new Dummy();
-            case "invalid-transactions" -> new InvalidTransactions();
+            case "validate-transactions" -> new ValidateTransactions();
             default -> throw new RuntimeException("Pipeline doesn't exist! Name: " + pipelineName);
         };
         pipeline
