@@ -1,7 +1,7 @@
 package br.avcaliani.hello_flink.pipelines;
 
 import br.avcaliani.hello_flink.cli.Args;
-import br.avcaliani.hello_flink.infra.serializers.KafkaDeserializer;
+import br.avcaliani.hello_flink.infra.Kafka;
 import br.avcaliani.hello_flink.infra.serializers.KafkaSerializer;
 import br.avcaliani.hello_flink.models.in.Transaction;
 import br.avcaliani.hello_flink.models.in.User;
@@ -13,8 +13,6 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.file.src.FileSource;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
-import org.apache.flink.connector.kafka.source.KafkaSource;
-import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.formats.csv.CsvReaderFormat;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.dataformat.csv.CsvMapper;
@@ -35,17 +33,21 @@ import org.apache.flink.util.Collector;
  */
 public class ValidateTransactions extends Pipeline {
 
-    private static final String KAFKA_IN_TOPIC = "DONU_TRANSACTIONS_V1";
     private static final String KAFKA_OUT_TOPIC = "DONU_EXECUTE_TRANSACTION_V1";
     private static final String KAFKA_DEAD_LETTER = "DLQ_DONU_TRANSACTIONS_V1";
-    private static final String KAFKA_GROUP_ID = "hello-flink--validate-txn-pipeline";
 
     @Override
     public Pipeline run(Args args) throws Exception {
 
         var env = args.getEnv();
+        var kafka = new Kafka(env, args.getKafkaBrokers());
+
         var users = readUsers(env, args.getBucket() + "/raw/users/");
-        var transactions = readTransactions(env, args.getKafkaBrokers());
+        var transactions = kafka.read(
+                "DONU_TRANSACTIONS_V1", /* Topic */
+                "hello-flink--validate-txn-pipeline", /* Group ID */
+                Transaction.class
+        );
 
         var richTxn = joinData(transactions, users)
                 .map(isTxnValid());
@@ -76,26 +78,6 @@ public class ValidateTransactions extends Pipeline {
 
         env.execute("hello-flink--validate-transactions");
         return this;
-    }
-
-    /**
-     * Read transactions data from a Kafka topic.
-     *
-     * @param env     Flink Stream Exec. Env.
-     * @param brokers List of Kafka Brokers.
-     * @return Transactions Data Stream.
-     */
-    private DataStream<Transaction> readTransactions(StreamExecutionEnvironment env, String brokers) {
-
-        KafkaSource<Transaction> source = KafkaSource.<Transaction>builder()
-                .setBootstrapServers(brokers)
-                .setTopics(KAFKA_IN_TOPIC)
-                .setGroupId(KAFKA_GROUP_ID)
-                .setStartingOffsets(OffsetsInitializer.earliest())
-                .setDeserializer(new KafkaDeserializer<>(Transaction.class))
-                .build();
-
-        return env.fromSource(source, WatermarkStrategy.noWatermarks(), "kafka-source--donu-txn-v1");
     }
 
     /**
