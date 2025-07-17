@@ -2,14 +2,14 @@ package br.avcaliani.hello_flink.helpers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 import javax.annotation.Nullable;
-import java.nio.charset.StandardCharsets;
+
+import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 
 /**
  * My generic Kafka serializer from POJOs to Kafka Message.
@@ -22,7 +22,7 @@ public class KafkaSerializer<T extends KafkaMessage> implements KafkaRecordSeria
             JsonMapper.builder()
                     .build()
                     .registerModule(new JavaTimeModule())
-                    .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+                    .configure(WRITE_DATES_AS_TIMESTAMPS, false);
 
     private final String topic;
 
@@ -30,16 +30,14 @@ public class KafkaSerializer<T extends KafkaMessage> implements KafkaRecordSeria
         this.topic = topic;
     }
 
-    @Nullable
-    @Override
+    @Override @Nullable
     public ProducerRecord<byte[], byte[]> serialize(T message, KafkaSinkContext context, Long timestamp) {
         try {
-            var key = message.getKey();
-            return new ProducerRecord<byte[], byte[]>(
+            return new ProducerRecord<>(
                     topic,
                     null, // no specific partition
                     timestamp,
-                    key == null ? null : key.getBytes(StandardCharsets.UTF_8),
+                    message.getKey(),
                     OBJECT_MAPPER.writeValueAsBytes(message),
                     message.getHeaders()
             );

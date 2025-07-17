@@ -1,5 +1,6 @@
 package br.avcaliani.hello_flink.models.out;
 
+import br.avcaliani.hello_flink.helpers.KafkaMessage;
 import br.avcaliani.hello_flink.models.in.Transaction;
 import br.avcaliani.hello_flink.models.in.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Data
-public class DTOTransaction {
+public class DTOTransaction extends KafkaMessage {
 
     @JsonProperty("transaction_id")
     private String id;
@@ -41,6 +42,9 @@ public class DTOTransaction {
         // Helper Fields
         this.from = tx.getFrom();
         this.to = tx.getTo();
+        // Kafka Message Fields
+        this.key = tx.getKey();
+        this.headers = tx.getHeaders();
     }
 
     @JsonIgnore

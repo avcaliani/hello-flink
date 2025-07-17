@@ -1,10 +1,12 @@
 package br.avcaliani.hello_flink.models.in;
 
+import br.avcaliani.hello_flink.helpers.KafkaMessage;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-@Data
-public class Transaction {
+@Data @EqualsAndHashCode(callSuper = true)
+public class Transaction extends KafkaMessage {
 
     @JsonProperty("transaction_id")
     private String id;
