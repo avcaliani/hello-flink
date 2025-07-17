@@ -33,12 +33,12 @@ import org.apache.flink.util.Collector;
  * Doc: Apache Flink + Kafka Connector
  * </a>
  */
-public class InvalidTransactions extends Pipeline {
+public class ValidateTransactions extends Pipeline {
 
     private static final String KAFKA_IN_TOPIC = "DONU_TRANSACTIONS_V1";
     private static final String KAFKA_OUT_TOPIC = "DONU_EXECUTE_TRANSACTION_V1";
     private static final String KAFKA_DEAD_LETTER = "DLQ_DONU_TRANSACTIONS_V1";
-    private static final String KAFKA_GROUP_ID = "hello-flink--invalid-txn-pipeline";
+    private static final String KAFKA_GROUP_ID = "hello-flink--validate-txn-pipeline";
 
     @Override
     public Pipeline run(Args args) throws Exception {
@@ -61,7 +61,7 @@ public class InvalidTransactions extends Pipeline {
 
         richTxn.filter(DTOTransaction::isValid).print();
 
-        env.execute("hello-flink--invalid-transactions");
+        env.execute("hello-flink--validate-transactions");
         return this;
     }
 

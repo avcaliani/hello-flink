@@ -42,7 +42,7 @@ public class Dummy extends Pipeline {
     /**
      * Read the users CSVs. </br>
      * Instead of declaring the columns manually in the schema, you can use a POJO instead.</br>
-     * Example in the <code>InvalidTransactions</code> pipeline.
+     * Example in the <code>ValidateTransactions</code> pipeline.
      *
      * @return CSV Schema.
      */

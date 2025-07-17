@@ -40,15 +40,15 @@ docker compose exec kafka-dev /opt/scripts/donu-transactions.sh
 #   Pretty simple pipeline, it just prints the list of customer in a CSV file. 
 ./run.sh --pipeline "dummy" --bucket "/data"
   
-# Pipeline - Invalid Transactions
+# Pipeline - Validate Transactions
 #   Classify the transactions as correct/incorrect, 
 #   enrich and forward them to another topic, check the diagram.
-./run.sh --pipeline "invalid-transactions" \
+./run.sh --pipeline "validate-transactions" \
       --bucket "/data" \
       --kafka-brokers "kafka-dev:29092"
 ```
 
-#### Pipeline - Invalid Transactions 
+#### Pipeline - Validate Transactions 
 
 ```mermaid
 ---
