@@ -13,7 +13,7 @@ My repository with [Apache Flink](https://flink.apache.org) learnings.
 01 - **Download** user mocked data.
 
 ```bash
-mkdir -p data/raw/users
+mkdir -p ./data/raw/users
 curl -o "data/raw/users/users.csv" \
   "https://raw.githubusercontent.com/avcaliani/kafka-in-docker/refs/heads/main/scripts/users.csv"
 ```
@@ -64,14 +64,14 @@ config:
     background: '#ffffff'
     edgeLabelBackground: '#ffffff'
 ---
-graph TD
-    app_txn s01@-->|publishes transactions| q_txn_v1
+graph LR
+  app_txn s01@-->|publishes<br>transactions| q_txn_v1
 
-    q_txn_v1 s02@--> app_flink
-    st_user --> app_flink
+  q_txn_v1 s02@--> app_flink
+  st_user --> app_flink
 
-    app_flink s03@-->|valid data| st_txn
-    app_flink s04@-->|invalid data| q_dead_letter
+  app_flink s03@-->|valid data| st_txn
+  app_flink s04@-->|invalid data| q_dead_letter
 
 %% ----------------------------------------
 %%  Style
@@ -83,11 +83,11 @@ app_flink@{ shape: rounded, label: "🐿️ Flink App" }
 
 %% Queues
 q_txn_v1@{ shape: das, label: "donu_txn_v1" }
-q_dead_letter@{ shape: das, label: "dead_letter" }
+q_dead_letter@{ shape: das, label: "dead_letter"}
 
 %% Storage
 st_user@{ shape: disk, label: "users.csv" }
-st_txn@{ shape: disk, label: "txn.avro" }
+st_txn@{ shape: das, label: "donu_exec_txn_v1" }
 
 %% Animation
 s01@{ animate: true }
