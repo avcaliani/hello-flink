@@ -8,13 +8,12 @@ import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsIni
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
-public class Kafka {
+public class Kafka extends Infra {
 
-    private final StreamExecutionEnvironment env;
     private final String brokers;
 
     public Kafka(StreamExecutionEnvironment env, String brokers) {
-        this.env = env;
+        super(env, "kafka");
         this.brokers = brokers;
     }
 
@@ -39,13 +38,4 @@ public class Kafka {
         return this.env.fromSource(source, WatermarkStrategy.noWatermarks(), sourceName(topic));
     }
 
-    /**
-     * The source name is always "kafka-source--topic-name".
-     *
-     * @param topic Kafka Topic.
-     * @return Flink source name.
-     */
-    private String sourceName(String topic) {
-        return "kafka-source--" + topic.replace('_', '-').toLowerCase();
-    }
 }
