@@ -1,24 +1,18 @@
 package br.avcaliani.hello_flink.pipelines;
 
 import br.avcaliani.hello_flink.cli.Args;
+import br.avcaliani.hello_flink.infra.CSV;
 import br.avcaliani.hello_flink.infra.Kafka;
 import br.avcaliani.hello_flink.infra.serializers.KafkaSerializer;
 import br.avcaliani.hello_flink.models.in.Transaction;
 import br.avcaliani.hello_flink.models.in.User;
 import br.avcaliani.hello_flink.models.out.DTOTransaction;
-import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.state.MapStateDescriptor;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.connector.base.DeliveryGuarantee;
-import org.apache.flink.connector.file.src.FileSource;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
-import org.apache.flink.core.fs.Path;
-import org.apache.flink.formats.csv.CsvReaderFormat;
-import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import org.apache.flink.streaming.api.datastream.BroadcastStream;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.co.BroadcastProcessFunction;
 import org.apache.flink.util.Collector;
 
@@ -42,7 +36,9 @@ public class ValidateTransactions extends Pipeline {
         var env = args.getEnv();
         var kafka = new Kafka(env, args.getKafkaBrokers());
 
-        var users = readUsers(env, args.getBucket() + "/raw/users/");
+        var users = new CSV(env)
+                .read(args.getBucket() + "/raw/users/", User.class);
+
         var transactions = kafka.read(
                 "DONU_TRANSACTIONS_V1", /* Topic */
                 "hello-flink--validate-txn-pipeline", /* Group ID */
@@ -79,32 +75,6 @@ public class ValidateTransactions extends Pipeline {
         env.execute("hello-flink--validate-transactions");
         return this;
     }
-
-    /**
-     * Read users data from a CSV file.
-     *
-     * @param env  Flink Stream Exec. Env.
-     * @param path CSV File path.
-     * @return Users Data Stream.
-     */
-    private DataStream<User> readUsers(StreamExecutionEnvironment env, String path) {
-
-        CsvReaderFormat<User> csvFormat = CsvReaderFormat.forSchema(
-                CsvMapper::new,
-                csvMapper ->
-                        csvMapper.schemaFor(User.class)
-                                .withoutQuoteChar()
-                                .withColumnSeparator(','),
-                TypeInformation.of(User.class)
-        );
-
-        return env.fromSource(
-                FileSource.forRecordStreamFormat(csvFormat, new Path(path)).build(),
-                WatermarkStrategy.noWatermarks(),
-                "csv-source--users"
-        );
-    }
-
 
     /**
      * It enriches the transaction data adding the user information for receiver and sender.
