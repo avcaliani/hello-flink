@@ -15,6 +15,11 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import static org.apache.flink.connector.base.DeliveryGuarantee.AT_LEAST_ONCE;
 import static org.apache.flink.connector.base.DeliveryGuarantee.EXACTLY_ONCE;
 
+/**
+ * <a href="https://nightlies.apache.org/flink/flink-docs-master/docs/connectors/datastream/kafka/">
+ * Flink + Kafka Documentation
+ * <a/>
+ */
 public class Kafka extends Infra {
 
     private final String brokers;
@@ -47,10 +52,6 @@ public class Kafka extends Infra {
 
     /**
      * Create a Kafka Sink for a specific topic.
-     * <br/>
-     * <a href="https://nightlies.apache.org/flink/flink-docs-master/docs/connectors/datastream/kafka/">
-     * Flink + Kafka Documentation
-     * <a/>
      * <br/><br/>
      * <b>Something about EXACTLY_ONCE...</b><br/>
      * <p><i>
@@ -73,7 +74,6 @@ public class Kafka extends Infra {
         var sinkBuilder = KafkaSink.<T>builder()
                 .setBootstrapServers(this.brokers)
                 .setRecordSerializer(new KafkaSerializer<>(topic))
-
                 .setDeliveryGuarantee(delivery);
 
         if (delivery == EXACTLY_ONCE) {

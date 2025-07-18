@@ -9,6 +9,11 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.dataformat.csv.Csv
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
+/**
+ * <a href="https://nightlies.apache.org/flink/flink-docs-master/docs/connectors/datastream/formats/csv/">
+ * Flink + CSV Documentation
+ * </a>
+ */
 public class CSV extends Infra {
 
     public CSV(StreamExecutionEnvironment env) {
