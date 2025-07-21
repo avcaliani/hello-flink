@@ -3,12 +3,12 @@
 JAR_FILE="hello-flink-1.0.0-uber.jar"
 CHECKPOINT_PATH="data/flink/checkpoint/"
 
-function bold() {
-  printf "\e[1m$1\e[m"
+bold() {
+  printf "\e[1m%s\e[m" "$1"
 }
 
 # Jar file will be at "build/libs/hello-flink-*-uber.jar"
-function build_jar() {
+build_jar() {
   ./gradlew uberJar
 }
 
